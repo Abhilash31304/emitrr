@@ -39,32 +39,32 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete }) => {
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-white p-2 mb-2 rounded shadow"
+      className="bg-white p-3 rounded shadow border border-gray-200"
     >
       <div 
         {...attributes}
         {...listeners}
-        className="cursor-move"
+        className="cursor-move touch-manipulation"
       >
-        <div className="flex justify-between items-center">
-          <h4 className="font-bold text-olive-green">{task.title}</h4>
-          <span className={`px-2 py-1 text-xs text-white rounded ${priorityColors[task.priority]}`}>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+          <h4 className="font-bold text-olive-green text-sm leading-tight">{task.title}</h4>
+          <span className={`px-2 py-1 text-xs text-white rounded self-start ${priorityColors[task.priority]}`}>
             {task.priority}
           </span>
         </div>
-        <p className="text-sm">{task.description}</p>
-        <div className="text-xs text-gray-500 mt-2">
-          <p>Created by: {task.createdBy}</p>
+        <p className="text-sm text-gray-700 mb-2 line-clamp-3">{task.description}</p>
+        <div className="text-xs text-gray-500 space-y-1">
+          <p className="truncate">Created by: {task.createdBy}</p>
           <p>Due: {task.dueDate}</p>
         </div>
       </div>
-      <div className="flex justify-end mt-2">
+      <div className="flex justify-end mt-3 gap-2">
         <button 
           onClick={(e) => {
             e.stopPropagation();
             onEdit();
           }} 
-          className="text-xs bg-dark-yellow text-white px-2 py-1 rounded mr-2"
+          className="text-xs bg-dark-yellow text-white px-3 py-1 rounded hover:bg-yellow-600 transition-colors"
         >
           Edit
         </button>
@@ -73,7 +73,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete }) => {
             e.stopPropagation();
             onDelete();
           }} 
-          className="text-xs bg-dark-red text-white px-2 py-1 rounded"
+          className="text-xs bg-dark-red text-white px-3 py-1 rounded hover:bg-red-600 transition-colors"
         >
           Delete
         </button>

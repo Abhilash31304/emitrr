@@ -223,17 +223,52 @@ const BoardDetailPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 bg-light-yellow min-h-screen">
-      <div className="flex items-center mb-4">
+    <div className="p-2 sm:p-4 bg-light-yellow min-h-screen">
+      <div className="flex flex-col sm:flex-row sm:items-center mb-4 gap-2">
         <button 
           onClick={() => navigate('/')}
-          className="bg-olive-green text-white px-3 py-1 rounded mr-4 text-sm hover:bg-green-600"
+          className="bg-olive-green text-white px-3 py-2 rounded text-sm hover:bg-green-600 self-start"
         >
           ← Back to Boards
         </button>
-        <h1 className="text-2xl font-bold text-olive-green">{board.name}</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-olive-green truncate">{board.name}</h1>
       </div>
-      <div className="mb-4 flex space-x-4">
+      
+      {/* Mobile Filters */}
+      <div className="mb-4 block sm:hidden space-y-2">
+        <input
+          type="text"
+          placeholder="Search tasks..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="border p-2 w-full"
+        />
+        <div className="flex gap-2">
+          <select
+            value={filterPriority}
+            onChange={(e) => setFilterPriority(e.target.value as Priority | '')}
+            className="border p-2 flex-1"
+          >
+            <option value="">All Priorities</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <input
+            type="date"
+            value={filterDueDate}
+            onChange={(e) => setFilterDueDate(e.target.value)}
+            min={new Date().toISOString().split('T')[0]}
+            className="border p-2 flex-1"
+          />
+        </div>
+        <button onClick={handleCreateColumn} className="bg-dark-yellow text-white p-2 rounded w-full">
+          Add Column
+        </button>
+      </div>
+
+      {/* Desktop Filters */}
+      <div className="mb-4 hidden sm:flex sm:space-x-4">
         <input
           type="text"
           placeholder="Search tasks..."
@@ -262,9 +297,27 @@ const BoardDetailPage: React.FC = () => {
           Add Column
         </button>
       </div>
+      
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={board.columns.map(c => c.id)} strategy={horizontalListSortingStrategy}>
-          <div className="flex">
+          {/* Mobile: Stacked columns */}
+          <div className="block sm:hidden space-y-4">
+            {board.columns.map(column => (
+              <Column
+                key={column.id}
+                column={column}
+                tasks={filteredTasks(column.tasks)}
+                onAddTask={() => handleCreateTask(column.id)}
+                onEditColumn={() => handleEditColumn(column.id)}
+                onDeleteColumn={() => handleDeleteColumn(column.id)}
+                onEditTask={handleEditTask}
+                onDeleteTask={(taskId) => handleDeleteTask(column.id, taskId)}
+              />
+            ))}
+          </div>
+          
+          {/* Desktop: Horizontal columns */}
+          <div className="hidden sm:flex overflow-x-auto pb-4 gap-4">
             {board.columns.map(column => (
               <Column
                 key={column.id}

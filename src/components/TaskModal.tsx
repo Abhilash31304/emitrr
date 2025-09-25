@@ -63,9 +63,9 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, ti
   const today = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg w-96 max-w-full">
-        <h2 className="text-xl font-bold mb-4 text-olive-green">{title}</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white p-4 sm:p-6 rounded-lg w-full max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <h2 className="text-lg sm:text-xl font-bold mb-4 text-olive-green">{title}</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">Title *</label>
@@ -73,7 +73,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, ti
               type="text"
               value={taskTitle}
               onChange={(e) => setTaskTitle(e.target.value)}
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded text-base"
               required
             />
           </div>
@@ -83,7 +83,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, ti
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full border p-2 rounded h-20"
+              className="w-full border p-2 rounded h-20 resize-none text-base"
             />
           </div>
           
@@ -93,46 +93,48 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, ti
               type="text"
               value={createdBy}
               onChange={(e) => setCreatedBy(e.target.value)}
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded text-base"
               placeholder="Your name"
             />
           </div>
           
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Priority</label>
-            <select
-              value={priority}
-              onChange={(e) => setPriority(e.target.value as Priority)}
-              className="w-full border p-2 rounded"
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium mb-2">Priority</label>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as Priority)}
+                className="w-full border p-2 rounded text-base"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2">Due Date</label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                min={today}
+                className="w-full border p-2 rounded text-base"
+              />
+            </div>
           </div>
           
-          <div className="mb-6">
-            <label className="block text-sm font-medium mb-2">Due Date</label>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              min={today}
-              className="w-full border p-2 rounded"
-            />
-          </div>
-          
-          <div className="flex justify-end space-x-2">
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2">
             <button
               type="button"
               onClick={handleCancel}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              className="w-full sm:w-auto px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 order-2 sm:order-1"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-dark-yellow text-white rounded hover:bg-yellow-600"
+              className="w-full sm:w-auto px-4 py-2 bg-dark-yellow text-white rounded hover:bg-yellow-600 order-1 sm:order-2"
             >
               Save
             </button>
