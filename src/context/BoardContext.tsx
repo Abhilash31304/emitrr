@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 interface BoardContextProps {
   boards: Board[];
   createBoard: (name: string) => void;
+  deleteBoard: (id: string) => void;
   getBoard: (id: string) => Board | undefined;
   createColumn: (boardId: string, title: string) => void;
   editColumn: (boardId: string, columnId: string, title: string) => void;
@@ -31,12 +32,34 @@ export const BoardProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, [boards]);
 
   const createBoard = (name: string) => {
+    const defaultColumns: Column[] = [
+      {
+        id: uuidv4(),
+        title: 'To Do',
+        tasks: [],
+      },
+      {
+        id: uuidv4(),
+        title: 'In Progress',
+        tasks: [],
+      },
+      {
+        id: uuidv4(),
+        title: 'Done',
+        tasks: [],
+      },
+    ];
+
     const newBoard: Board = {
       id: uuidv4(),
       name,
-      columns: [],
+      columns: defaultColumns,
     };
     setBoards([...boards, newBoard]);
+  };
+
+  const deleteBoard = (id: string) => {
+    setBoards(boards.filter(board => board.id !== id));
   };
 
   const getBoard = (id: string) => {
@@ -221,6 +244,7 @@ export const BoardProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       value={{
         boards,
         createBoard,
+        deleteBoard,
         getBoard,
         createColumn,
         editColumn,

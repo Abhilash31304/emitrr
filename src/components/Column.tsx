@@ -1,5 +1,6 @@
 import React from 'react';
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Column as ColumnType, Task } from '../types';
 import TaskCard from './TaskCard';
@@ -18,10 +19,24 @@ const Column: React.FC<ColumnProps> = ({ column, tasks, onAddTask, onEditColumn,
   const {
     attributes,
     listeners,
-    setNodeRef,
+    setNodeRef: setSortableNodeRef,
     transform,
     transition,
-  } = useSortable({ id: column.id });
+  } = useSortable({ 
+    id: column.id,
+    data: {
+      type: 'Column',
+      column
+    }
+  });
+
+  const { setNodeRef: setDroppableNodeRef } = useDroppable({
+    id: column.id,
+    data: {
+      type: 'Column',
+      column
+    }
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -30,19 +45,41 @@ const Column: React.FC<ColumnProps> = ({ column, tasks, onAddTask, onEditColumn,
 
   return (
     <div
-      ref={setNodeRef}
+      ref={(node) => {
+        setSortableNodeRef(node);
+        setDroppableNodeRef(node);
+      }}
       style={style}
-      className="bg-gray-100 p-2 rounded w-64 mr-4 flex-shrink-0"
+      className="bg-white p-2 rounded w-64 mr-4 flex-shrink-0"
     >
-      <div className="flex justify-between items-center mb-2" {...attributes} {...listeners}>
-        <h3 className="font-bold">{column.title}</h3>
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="font-bold text-olive-green" {...attributes} {...listeners}>{column.title}</h3>
         <div>
-          <button onClick={onEditColumn} className="text-xs p-1">Edit</button>
-          <button onClick={onDeleteColumn} className="text-xs p-1">Delete</button>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditColumn();
+            }} 
+            className="text-xs p-1 text-dark-yellow"
+          >
+            Edit
+          </button>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeleteColumn();
+            }} 
+            className="text-xs p-1 text-dark-yellow"
+          >
+            Delete
+          </button>
         </div>
       </div>
+      <button onClick={onAddTask} className="w-full mb-2 bg-dark-yellow text-white p-2 rounded">
+        Add Task
+      </button>
       <SortableContext items={tasks.map(t => t.id)}>
-        <div className="min-h-[100px]">
+        <div>
           {tasks.map(task => (
             <TaskCard
               key={task.id}
@@ -53,9 +90,6 @@ const Column: React.FC<ColumnProps> = ({ column, tasks, onAddTask, onEditColumn,
           ))}
         </div>
       </SortableContext>
-      <button onClick={onAddTask} className="w-full mt-2 bg-gray-200 p-2 rounded">
-        Add Task
-      </button>
     </div>
   );
 };

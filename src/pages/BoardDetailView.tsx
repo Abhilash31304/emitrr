@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { BoardContext } from '../context/BoardContext';
 import {
   DndContext,
@@ -16,15 +16,46 @@ import {
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import Column from '../components/Column';
+import TaskModal from '../components/TaskModal';
+import ConfirmModal from '../components/ConfirmModal';
+import PromptModal from '../components/PromptModal';
 import { Board, Task, Priority } from '../types';
 
 const BoardDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const context = useContext(BoardContext);
   const [board, setBoard] = useState<Board | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPriority, setFilterPriority] = useState<Priority | ''>('');
   const [filterDueDate, setFilterDueDate] = useState('');
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
+  const [currentColumnId, setCurrentColumnId] = useState<string>('');
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
+  const [promptModal, setPromptModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    defaultValue: string;
+    onConfirm: (value: string) => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    defaultValue: '',
+    onConfirm: () => {}
+  });
 
   useEffect(() => {
     if (context && id) {
@@ -98,53 +129,86 @@ const BoardDetailPage: React.FC = () => {
   };
 
   const handleCreateColumn = () => {
-    const title = prompt('Enter column title:');
-    if (title) {
-      createColumn(board.id, title);
-    }
+    setPromptModal({
+      isOpen: true,
+      title: 'Create Column',
+      message: 'Enter column title:',
+      defaultValue: '',
+      onConfirm: (title: string) => {
+        if (title.trim()) {
+          createColumn(board.id, title.trim());
+        }
+        setPromptModal({ ...promptModal, isOpen: false });
+      }
+    });
   };
 
   const handleEditColumn = (columnId: string) => {
     const column = board.columns.find(c => c.id === columnId);
     if (column) {
-      const newTitle = prompt('Enter new column title:', column.title);
-      if (newTitle) {
-        editColumn(board.id, columnId, newTitle);
-      }
+      setPromptModal({
+        isOpen: true,
+        title: 'Edit Column',
+        message: 'Enter new column title:',
+        defaultValue: column.title,
+        onConfirm: (newTitle: string) => {
+          if (newTitle.trim()) {
+            editColumn(board.id, columnId, newTitle.trim());
+          }
+          setPromptModal({ ...promptModal, isOpen: false });
+        }
+      });
     }
   };
 
   const handleDeleteColumn = (columnId: string) => {
-    if (window.confirm('Are you sure you want to delete this column?')) {
-      deleteColumn(board.id, columnId);
-    }
+    const column = board.columns.find(c => c.id === columnId);
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Column',
+      message: `Are you sure you want to delete the column "${column?.title}"? All tasks in this column will be lost.`,
+      onConfirm: () => {
+        deleteColumn(board.id, columnId);
+        setConfirmModal({ ...confirmModal, isOpen: false });
+      }
+    });
   };
 
   const handleCreateTask = (columnId: string) => {
-    const title = prompt('Enter task title:');
-    if (title) {
-      const description = prompt('Enter task description:') || '';
-      const createdBy = prompt('Enter your name:') || 'User';
-      const priority = prompt('Enter priority (high, medium, low):', 'medium') as Priority;
-      const dueDate = prompt('Enter due date (YYYY-MM-DD):') || '';
-      createTask(board.id, columnId, title, description, createdBy, priority, dueDate);
-    }
+    setEditingTask(undefined);
+    setCurrentColumnId(columnId);
+    setIsTaskModalOpen(true);
   };
 
   const handleEditTask = (task: Task) => {
-    const newTitle = prompt('Enter new task title:', task.title);
-    if (newTitle) {
-      const newDescription = prompt('Enter new task description:', task.description) || '';
-      const newPriority = prompt('Enter new priority (high, medium, low):', task.priority) as Priority;
-      const newDueDate = prompt('Enter new due date (YYYY-MM-DD):', task.dueDate) || '';
-      editTask(board.id, task.columnId, task.id, newTitle, newDescription, newPriority, newDueDate);
+    setEditingTask(task);
+    setCurrentColumnId(task.columnId);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleSaveTask = (title: string, description: string, createdBy: string, priority: Priority, dueDate: string) => {
+    if (editingTask) {
+      editTask(board.id, editingTask.columnId, editingTask.id, title, description, priority, dueDate);
+    } else {
+      createTask(board.id, currentColumnId, title, description, createdBy, priority, dueDate);
     }
+    setIsTaskModalOpen(false);
+    setEditingTask(undefined);
+    setCurrentColumnId('');
   };
 
   const handleDeleteTask = (columnId: string, taskId: string) => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      deleteTask(board.id, columnId, taskId);
-    }
+    const column = board.columns.find(c => c.id === columnId);
+    const task = column?.tasks.find(t => t.id === taskId);
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Task',
+      message: `Are you sure you want to delete the task "${task?.title}"?`,
+      onConfirm: () => {
+        deleteTask(board.id, columnId, taskId);
+        setConfirmModal({ ...confirmModal, isOpen: false });
+      }
+    });
   };
 
   const filteredTasks = (tasks: Task[]) => {
@@ -159,8 +223,16 @@ const BoardDetailPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">{board.name}</h1>
+    <div className="p-4 bg-light-yellow min-h-screen">
+      <div className="flex items-center mb-4">
+        <button 
+          onClick={() => navigate('/')}
+          className="bg-olive-green text-white px-3 py-1 rounded mr-4 text-sm hover:bg-green-600"
+        >
+          ← Back to Boards
+        </button>
+        <h1 className="text-2xl font-bold text-olive-green">{board.name}</h1>
+      </div>
       <div className="mb-4 flex space-x-4">
         <input
           type="text"
@@ -183,9 +255,10 @@ const BoardDetailPage: React.FC = () => {
           type="date"
           value={filterDueDate}
           onChange={(e) => setFilterDueDate(e.target.value)}
+          min={new Date().toISOString().split('T')[0]}
           className="border p-2"
         />
-        <button onClick={handleCreateColumn} className="bg-blue-500 text-white p-2 rounded">
+        <button onClick={handleCreateColumn} className="bg-dark-yellow text-white p-2 rounded">
           Add Column
         </button>
       </div>
@@ -207,6 +280,34 @@ const BoardDetailPage: React.FC = () => {
           </div>
         </SortableContext>
       </DndContext>
+      
+      <TaskModal
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
+        onSave={handleSaveTask}
+        task={editingTask}
+        title={editingTask ? 'Edit Task' : 'Create Task'}
+      />
+      
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmButtonColor="bg-dark-red"
+      />
+      
+      <PromptModal
+        isOpen={promptModal.isOpen}
+        title={promptModal.title}
+        message={promptModal.message}
+        defaultValue={promptModal.defaultValue}
+        onConfirm={promptModal.onConfirm}
+        onCancel={() => setPromptModal({ ...promptModal, isOpen: false })}
+      />
     </div>
   );
 };
