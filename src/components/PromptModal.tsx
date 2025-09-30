@@ -12,6 +12,7 @@ interface PromptModalProps {
   cancelText?: string;
 }
 
+
 const PromptModal: React.FC<PromptModalProps> = ({
   isOpen,
   title,

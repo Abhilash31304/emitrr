@@ -9,7 +9,16 @@ interface TaskCardProps {
   onDelete: () => void;
 }
 
+/**
+ * TaskCard component - Renders an individual task with drag-and-drop functionality
+ * Features:
+ * - Draggable using @dnd-kit/sortable
+ * - Priority color coding
+ * - Edit and delete actions
+ * - Responsive design for mobile and desktop
+ */
 const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete }) => {
+  // useSortable hook provides drag-and-drop functionality
   const {
     attributes,
     listeners,
@@ -24,11 +33,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete }) => {
     }
   });
 
+  // Apply drag transform styles
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
 
+  // Color mapping for different priority levels
   const priorityColors: { [key: string]: string } = {
     high: 'bg-dark-red',
     medium: 'bg-dark-yellow',

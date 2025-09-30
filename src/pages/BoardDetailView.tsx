@@ -21,17 +21,34 @@ import ConfirmModal from '../components/ConfirmModal';
 import PromptModal from '../components/PromptModal';
 import { Board, Task, Priority } from '../types';
 
+/**
+ * BoardDetailPage component - Main board view with drag-and-drop functionality
+ * Features:
+ * - Full Kanban board with columns and tasks
+ * - Drag-and-drop for tasks and columns
+ * - Search and filter functionality
+ * - Task and column management (CRUD operations)
+ * - Responsive design for all screen sizes
+ */
 const BoardDetailPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>(); // Get board ID from URL
   const navigate = useNavigate();
   const context = useContext(BoardContext);
+  
+  // Main board state
   const [board, setBoard] = useState<Board | undefined>(undefined);
+  
+  // Search and filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPriority, setFilterPriority] = useState<Priority | ''>('');
   const [filterDueDate, setFilterDueDate] = useState('');
+  
+  // Modal states
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
   const [currentColumnId, setCurrentColumnId] = useState<string>('');
+  
+  // Confirmation modal state for delete operations
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -43,6 +60,8 @@ const BoardDetailPage: React.FC = () => {
     message: '',
     onConfirm: () => {}
   });
+  
+  // Prompt modal state for create/edit operations
   const [promptModal, setPromptModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -57,6 +76,10 @@ const BoardDetailPage: React.FC = () => {
     onConfirm: () => {}
   });
 
+  /**
+   * Effect to load board data when component mounts or board ID changes
+   * Redirects to home if board is not found
+   */
   useEffect(() => {
     if (context && id) {
       const currentBoard = context.getBoard(id);
@@ -64,17 +87,23 @@ const BoardDetailPage: React.FC = () => {
     }
   }, [context, id]);
 
+  /**
+   * Configure drag sensors for both mouse/touch and keyboard interactions
+   * Enables accessibility and multiple input methods for drag-and-drop
+   */
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor), // Mouse and touch interactions
     useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
+      coordinateGetter: sortableKeyboardCoordinates, // Keyboard accessibility
     })
   );
 
+  // Guard clause - show loading if context or board is not available
   if (!context || !board) {
     return <div>Loading...</div>;
   }
 
+  // Extract board management functions from context
   const {
     createColumn,
     editColumn,
@@ -86,16 +115,25 @@ const BoardDetailPage: React.FC = () => {
     reorderTask,
   } = context;
 
+  /**
+   * Handles the end of a drag operation
+   * Determines whether tasks or columns are being moved and calls appropriate functions
+   * Supports:
+   * - Moving tasks between columns
+   * - Reordering tasks within the same column
+   * - Reordering columns
+   */
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (!over) return;
+    if (!over) return; // No valid drop target
 
     const activeId = active.id as string;
     const overId = over.id as string;
 
-    if (activeId === overId) return;
+    if (activeId === overId) return; // No change needed
 
+    // Determine what type of items are being dragged
     const activeIsTask = active.data.current?.type === 'Task';
     const overIsTask = over.data.current?.type === 'Task';
     const overIsColumn = over.data.current?.type === 'Column';

@@ -5,27 +5,40 @@ interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (title: string, description: string, createdBy: string, priority: Priority, dueDate: string) => void;
-  task?: Task;
-  title: string;
+  task?: Task; // Optional - when editing existing task
+  title: string; // Modal title
 }
 
+/**
+ * TaskModal component - Modal for creating and editing tasks
+ * Features:
+ * - Form validation
+ * - Edit mode when task prop is provided
+ * - Create mode when task prop is undefined
+ * - Responsive design
+ */
 const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, title }) => {
+  // Form state management
   const [taskTitle, setTaskTitle] = useState('');
   const [description, setDescription] = useState('');
   const [createdBy, setCreatedBy] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [dueDate, setDueDate] = useState('');
 
-  // Update form when task changes
+  /**
+   * Effect to populate form when editing existing task or reset for new task
+   * Runs whenever the task prop changes
+   */
   React.useEffect(() => {
     if (task) {
+      // Editing mode - populate form with existing task data
       setTaskTitle(task.title);
       setDescription(task.description);
       setCreatedBy(task.createdBy);
       setPriority(task.priority);
       setDueDate(task.dueDate);
     } else {
-      // Reset form for new task
+      // Creating mode - reset form to defaults
       setTaskTitle('');
       setDescription('');
       setCreatedBy('');
@@ -34,12 +47,22 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, onSave, task, ti
     }
   }, [task]);
 
+  /**
+   * Handles form submission with validation
+   * Ensures task title is not empty and calls onSave with form data
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (taskTitle.trim()) {
-      onSave(taskTitle.trim(), description.trim(), createdBy.trim() || task?.createdBy || 'User', priority, dueDate);
+      onSave(
+        taskTitle.trim(), 
+        description.trim(), 
+        createdBy.trim() || task?.createdBy || 'User', // Use existing creator if editing
+        priority, 
+        dueDate
+      );
       onClose();
-      // Reset form
+      // Reset form after successful submission
       setTaskTitle('');
       setDescription('');
       setCreatedBy('');

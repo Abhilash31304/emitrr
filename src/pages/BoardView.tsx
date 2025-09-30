@@ -3,9 +3,16 @@ import { Link } from 'react-router-dom';
 import { BoardContext } from '../context/BoardContext';
 import ConfirmModal from '../components/ConfirmModal';
 
+/**
+ * BoardView component - The main landing page showing all boards
+ * Allows users to create new boards, view existing ones, and delete boards
+ * Features responsive design with different layouts for mobile and desktop
+ */
 const BoardView: React.FC = () => {
   const context = useContext(BoardContext);
   const [newBoardName, setNewBoardName] = useState('');
+  
+  // State for managing the confirmation modal when deleting boards
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -18,19 +25,30 @@ const BoardView: React.FC = () => {
     onConfirm: () => {}
   });
 
+  // Guard clause - show loading if context is not available
   if (!context) {
     return <div>Loading...</div>;
   }
 
   const { boards, createBoard, deleteBoard } = context;
 
+  /**
+   * Handles creating a new board with validation
+   * Only creates board if name is not empty after trimming whitespace
+   */
   const handleCreateBoard = () => {
     if (newBoardName.trim()) {
       createBoard(newBoardName.trim());
-      setNewBoardName('');
+      setNewBoardName(''); // Clear input after creation
     }
   };
 
+  /**
+   * Handles board deletion with confirmation modal
+   * Shows a confirmation dialog before actually deleting the board
+   * @param boardId - ID of the board to delete
+   * @param boardName - Name of the board (used in confirmation message)
+   */
   const handleDeleteBoard = (boardId: string, boardName: string) => {
     setConfirmModal({
       isOpen: true,

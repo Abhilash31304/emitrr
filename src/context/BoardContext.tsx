@@ -2,6 +2,10 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { Board, Column, Task, Priority } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * Interface defining all the methods and properties available through BoardContext
+ * This includes CRUD operations for boards, columns, and tasks, plus search/filter functionality
+ */
 interface BoardContextProps {
   boards: Board[];
   createBoard: (name: string) => void;
@@ -19,19 +23,34 @@ interface BoardContextProps {
   filterTasks: (boardId: string, priority?: Priority, dueDate?: string) => Task[];
 }
 
+/**
+ * React Context for managing global board state
+ * Provides all board-related functionality to child components
+ */
 export const BoardContext = createContext<BoardContextProps | undefined>(undefined);
 
+/**
+ * BoardProvider component that wraps the app and provides board state management
+ * Handles localStorage persistence and provides all board operations
+ */
 export const BoardProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // Initialize boards from localStorage or empty array
   const [boards, setBoards] = useState<Board[]>(() => {
     const savedBoards = localStorage.getItem('boards');
     return savedBoards ? JSON.parse(savedBoards) : [];
   });
 
+  // Persist boards to localStorage whenever boards state changes
   useEffect(() => {
     localStorage.setItem('boards', JSON.stringify(boards));
   }, [boards]);
 
+  /**
+   * Creates a new board with default columns (To Do, In Progress, Done)
+   * @param name - The name of the new board
+   */
   const createBoard = (name: string) => {
+    // Default Kanban columns that every new board starts with
     const defaultColumns: Column[] = [
       {
         id: uuidv4(),

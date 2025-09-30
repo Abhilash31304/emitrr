@@ -15,7 +15,16 @@ interface ColumnProps {
   onDeleteTask: (taskId: string) => void;
 }
 
+/**
+ * Column component - Represents a Kanban column that can contain tasks
+ * Features:
+ * - Draggable column (can reorder columns)
+ * - Droppable area for tasks
+ * - Column management (edit/delete)
+ * - Task management (add/edit/delete tasks within column)
+ */
 const Column: React.FC<ColumnProps> = ({ column, tasks, onAddTask, onEditColumn, onDeleteColumn, onEditTask, onDeleteTask }) => {
+  // useSortable makes the column itself draggable for reordering
   const {
     attributes,
     listeners,
@@ -30,6 +39,7 @@ const Column: React.FC<ColumnProps> = ({ column, tasks, onAddTask, onEditColumn,
     }
   });
 
+  // useDroppable makes the column a valid drop target for tasks
   const { setNodeRef: setDroppableNodeRef } = useDroppable({
     id: column.id,
     data: {
